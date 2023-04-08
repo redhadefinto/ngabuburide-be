@@ -2,7 +2,7 @@ const db = require("../configs/supabase");
 
 const allCategories = () => {
   return new Promise((resolve, reject) => {
-    db.query("select name from categories", (error, result) => {
+    db.query("select * from categories", (error, result) => {
       if (error) {
         reject(error);
       } else {
@@ -67,7 +67,7 @@ const addImages = (id, filename) => {
 const getProductId = (id) => {
   return new Promise((resolve, reject) => {
     db.query(
-      "select p.id, p.prod_name, p.prod_name, p.description, p.price, p.color, p.brand, p.category_id, p.stock, p.condition, a.image from products p join prod_images a on p.id=a.prod_id where p.id=$1",
+      "select p.id, p.prod_name, p.prod_name, p.description, p.price, p.color, p.brand, q.name as category_name, p.stock, p.condition, a.image from products p join prod_images a on p.id=a.prod_id join categories q on p.category_id=q.id where p.id=$1",
       [id],
       (error, result) => {
         if (error) {
@@ -79,7 +79,7 @@ const getProductId = (id) => {
     );
   });
 };
-const getAllProduct = (id) => {
+const getAllProduct = () => {
   return new Promise((resolve, reject) => {
     db.query(
       "select p.id, p.prod_name, p.prod_name, p.description, p.price, p.color, p.brand, c.name as category_name, p.stock, p.condition, a.image from products p join prod_images a on p.id=a.prod_id join categories c on p.category_id=c.id",
@@ -94,10 +94,43 @@ const getAllProduct = (id) => {
   });
 };
 
+const getCountCategory = () => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      "SELECT name, COUNT(*) AS totaldata FROM products INNER JOIN categories ON products.category_id = categories.id GROUP BY categories.id",
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      }
+    );
+  });
+};
+
+const countCategory = (id) => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      "SELECT COUNT(*) FROM products WHERE category_id = $1",
+      [id],
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
+};
+
 module.exports = {
   allCategories,
   addProduct,
   addImages,
   getProductId,
   getAllProduct,
+  getCountCategory,
+  countCategory,
 };
